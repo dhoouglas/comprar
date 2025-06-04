@@ -35,12 +35,16 @@ export function Home() {
     };
 
     await itemsStorage.add(newItem);
-    await getItems();
+    await itemsByStatus();
+
+    Alert.alert("Adicionado", `Adicionado ${description}`);
+    setFilter(FilterStatus.PENDING);
+    setDescription("");
   }
 
-  async function getItems() {
+  async function itemsByStatus() {
     try {
-      const response = await itemsStorage.get();
+      const response = await itemsStorage.getByStatus(filter);
       setItems(response);
     } catch (error) {
       console.log(error);
@@ -48,8 +52,18 @@ export function Home() {
     }
   }
 
+  async function handleRemove(id: string) {
+    try {
+      await itemsStorage.remove(id);
+      await itemsByStatus();
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Remover", "Nao foi possivel remover.");
+    }
+  }
+
   useEffect(() => {
-    getItems();
+    itemsByStatus();
   }, [filter]);
 
   return (
@@ -60,6 +74,7 @@ export function Home() {
         <Input
           placeholder="O que você precisa comprar ?"
           onChangeText={setDescription}
+          value={description}
         />
         <Button title="Adicionar" onPress={handleAddItem} />
       </View>
@@ -87,7 +102,7 @@ export function Home() {
             <Item
               data={item}
               onStatus={() => console.log("Alterar status")}
-              onRemove={() => console.log("Remover")}
+              onRemove={() => handleRemove(item.id)}
             />
           )}
           showsVerticalScrollIndicator={false}
